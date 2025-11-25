@@ -1,12 +1,17 @@
 import requests
 import os
+import random
 from variables import bot_url, chat_id, log_channel_id
+
+# --- تنظیمات ---
+IMAGE_TOPICS = ["forest", "mountain", "nature", "river", "waterfall"]  # موضوعات عکس
 
 def main():
     os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
 
-    # URL تصویر طبیعت روزانه واقعی (Picsum Photos)
-    imageUrl = "https://picsum.photos/1920/1080?random=1"
+    # انتخاب موضوع رندوم برای عکس
+    topic = random.choice(IMAGE_TOPICS)
+    imageUrl = f"https://source.unsplash.com/1920x1080/?{topic}"
     filename = "wallpaper.jpg"
 
     try:
@@ -19,7 +24,7 @@ def main():
         else:
             log("Downloaded content is not an image")
             print("Downloaded content is not an image")
-            return  # ادامه نده چون تصویر معتبر نیست
+            return
 
         # ارسال تصویر به کانال اصلی
         with open(filename, "rb") as f:
