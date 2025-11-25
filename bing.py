@@ -3,20 +3,20 @@ import os
 import random
 from variables import bot_url, chat_id, log_channel_id
 
-# --- تنظیمات ---
-IMAGE_TOPICS = ["forest", "mountain", "nature", "river", "waterfall"]  # موضوعات عکس
+IMAGE_TOPICS = ["forest", "mountain", "nature", "river", "waterfall"]
 
 def main():
-    os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
-
-    # انتخاب موضوع رندوم برای عکس
+    os.chdir(os.path.realpath(os.path.dirname(__file__)))
     topic = random.choice(IMAGE_TOPICS)
     imageUrl = f"https://source.unsplash.com/1920x1080/?{topic}"
     filename = "wallpaper.jpg"
 
     try:
-        # دانلود تصویر
-        r = requests.get(imageUrl)
+        # دنبال کردن ریدایرکت برای گرفتن URL واقعی تصویر
+        r = requests.get(imageUrl, allow_redirects=True)
+        final_url = r.url
+        r = requests.get(final_url)
+        
         if "image" in r.headers.get("Content-Type", ""):
             with open(filename, "wb") as f:
                 f.write(r.content)
@@ -26,7 +26,7 @@ def main():
             print("Downloaded content is not an image")
             return
 
-        # ارسال تصویر به کانال اصلی
+        # ارسال تصویر به کانال
         with open(filename, "rb") as f:
             response = requests.post(bot_url + 'sendPhoto', data={'chat_id': chat_id}, files={'photo': f})
 
