@@ -1,22 +1,17 @@
 import requests
 import os
-import random
 from variables import bot_url, chat_id, log_channel_id
 
-IMAGE_TOPICS = ["forest", "mountain", "nature", "river", "waterfall"]
-
 def main():
-    os.chdir(os.path.realpath(os.path.dirname(__file__)))
-    topic = random.choice(IMAGE_TOPICS)
-    imageUrl = f"https://source.unsplash.com/1920x1080/?{topic}"
+    os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
+
+    # URL تصویر طبیعت روزانه واقعی (Picsum Photos)
+    imageUrl = "https://picsum.photos/1920/1080?random=1"
     filename = "wallpaper.jpg"
 
     try:
-        # دنبال کردن ریدایرکت برای گرفتن URL واقعی تصویر
-        r = requests.get(imageUrl, allow_redirects=True)
-        final_url = r.url
-        r = requests.get(final_url)
-        
+        # دانلود تصویر
+        r = requests.get(imageUrl)
         if "image" in r.headers.get("Content-Type", ""):
             with open(filename, "wb") as f:
                 f.write(r.content)
@@ -24,9 +19,9 @@ def main():
         else:
             log("Downloaded content is not an image")
             print("Downloaded content is not an image")
-            return
+            return  # ادامه نده چون تصویر معتبر نیست
 
-        # ارسال تصویر به کانال
+        # ارسال تصویر به کانال اصلی
         with open(filename, "rb") as f:
             response = requests.post(bot_url + 'sendPhoto', data={'chat_id': chat_id}, files={'photo': f})
 
