@@ -1,61 +1,48 @@
 import requests
-import os
+import random
 from variables import bot_url, chat_id, log_channel_id
 
+API_KEY = "53401345-ddeb36315024ea5eca9cf9cf3"
+TOPIC = "nature"
+PER_PAGE = 10  # تعداد عکس‌هایی که می‌خوایم انتخاب رندوم کنیم
+FILENAME = "wallpaper.jpg"
+
 def main():
-    os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
-
-    # URL تصویر طبیعت روزانه واقعی (Picsum Photos)
-    imageUrl = "https://picsum.photos/1920/1080?random=1"
-    filename = "wallpaper.jpg"
-
     try:
-        # دانلود تصویر
-        r = requests.get(imageUrl)
-        if "image" in r.headers.get("Content-Type", ""):
-            with open(filename, "wb") as f:
-                f.write(r.content)
-            print("Image downloaded successfully")
+        # گرفتن عکس‌ها از Pixabay
+        url = f"https://pixabay.com/api/?key={API_KEY}&q={TOPIC}&image_type=photo&orientation=horizontal&per_page={PER_PAGE}"
+        response = requests.get(url).json()
+        images = response.get('hits', [])
+        if not images:
+            log("No images returned from Pixabay")
+            print("No images returned from Pixabay")
+            return
+
+        # انتخاب رندوم یک عکس
+        image_url = random.choice(images)['largeImageURL']
+        r = requests.get(image_url)
+        with open(FILENAME, "wb") as f:
+            f.write(r.content)
+        print("Image downloaded:", image_url)
+
+        # ارسال عکس به کانال تلگرام
+        with open(FILENAME, "rb") as f:
+            resp = requests.post(bot_url + 'sendPhoto', data={'chat_id': chat_id}, files={'photo': f})
+        if resp.status_code == 200:
+            log("Image sent successfully!")
         else:
-            log("Downloaded content is not an image")
-            print("Downloaded content is not an image")
-            return  # ادامه نده چون تصویر معتبر نیست
-
-        # ارسال تصویر به کانال اصلی
-        with open(filename, "rb") as f:
-            response = requests.post(bot_url + 'sendPhoto', data={'chat_id': chat_id}, files={'photo': f})
-
-        if response.status_code == 200:
-            print('Image sent successfully!')
-            log('Image sent successfully!')
-        else:
-            print('Error in sending image:', response.status_code)
-            log(f'Error in sending image: {response.status_code}')
-
-        # ارسال همان عکس به عنوان فایل با کیفیت بالا
-        with open(filename, "rb") as f:
-            response = requests.post(bot_url + 'sendDocument', data={'chat_id': chat_id}, files={'document': f})
-
-        if response.status_code == 200:
-            print('Document sent successfully!')
-            log('Document sent successfully!')
-        else:
-            print('Error in sending document:', response.status_code)
-            log(f'Error in sending document: {response.status_code}')
+            log(f"Error sending image: {resp.status_code}")
 
     except Exception as e:
-        print("An error occurred:", str(e))
         log(f"An error occurred: {str(e)}")
+        print("Error:", str(e))
 
 def log(message):
     try:
-        log_resp = requests.post(bot_url + "sendMessage", data={"chat_id": log_channel_id, "text": message})
-        if log_resp.status_code == 200:
-            print('Log registered')
-        else:
-            print('Error in registering log:', log_resp.status_code)
-    except Exception as e:
-        print("Logging failed:", str(e))
+        requests.post(bot_url + "sendMessage", data={"chat_id": log_channel_id, "text": message})
+        print("Log:", message)
+    except:
+        print("Failed to send log:", message)
 
 if __name__ == "__main__":
     main()
