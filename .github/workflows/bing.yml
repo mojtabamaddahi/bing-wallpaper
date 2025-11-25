@@ -2,8 +2,7 @@ name: Bing Wallpaper Bot
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # هر 5 دقیقه اجرا می‌شود
-  workflow_dispatch:  # امکان اجرای دستی
+    - cron: "*/5 * * * *"  # هر 5 دقیقه اجرا می‌شود
 
 jobs:
   run-bot:
