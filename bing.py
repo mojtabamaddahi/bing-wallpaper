@@ -5,18 +5,23 @@ from variables import bot_url, chat_id, log_channel_id
 def main():
     os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
 
-    # URL عکس طبیعت روزانه از Unsplash
-    imageUrl = "https://source.unsplash.com/1920x1080/?nature"
+    # URL تصویر طبیعت روزانه واقعی (Picsum Photos)
+    imageUrl = "https://picsum.photos/1920/1080?random=1"
+    filename = "wallpaper.jpg"
 
     try:
         # دانلود تصویر
         r = requests.get(imageUrl)
-        filename = "wallpaper.jpg"
-        with open(filename, "wb") as f:
-            f.write(r.content)
-        print("Image downloaded successfully")
+        if "image" in r.headers.get("Content-Type", ""):
+            with open(filename, "wb") as f:
+                f.write(r.content)
+            print("Image downloaded successfully")
+        else:
+            log("Downloaded content is not an image")
+            print("Downloaded content is not an image")
+            return  # ادامه نده چون تصویر معتبر نیست
 
-        # ارسال عکس به کانال اصلی
+        # ارسال تصویر به کانال اصلی
         with open(filename, "rb") as f:
             response = requests.post(bot_url + 'sendPhoto', data={'chat_id': chat_id}, files={'photo': f})
 
