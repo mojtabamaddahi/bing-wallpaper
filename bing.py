@@ -2,8 +2,7 @@ import requests, os
 from variables import peapix_url, bot_url, chat_id, log_channel_id
 
 def main():
-    os.chdir(os.path.realpath(os.path.dirname(__file__))) # changes directory to path of bing.py so when I run script from another directory won't get error
-    # these headers are used to make the request more natural like when it's from a user not a bot
+    os.chdir(os.path.realpath(os.path.dirname(__file__)))  # تغییر مسیر به مسیر فایل
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
         'Referer': 'https://google.com',
@@ -11,75 +10,65 @@ def main():
     }
     response = requests.get(peapix_url, headers=headers)
     if response.status_code == 200:
-        # The request was successful
-        data = response.json()  # Get the JSON data from the response
+        data = response.json()
         date = data[0]["date"]
         imageUrl = data[0]["imageUrl"]
         print(date)
         print(imageUrl)
         if date_exists(date):
-            print("date " + date + " already exists")
-            log("date " + date + " already exists")
+            print(f"date {date} already exists")
+            log(f"date {date} already exists")
         else:
-            with open("./dates/" + date, 'w') as file:
+            os.makedirs("./dates", exist_ok=True)
+            with open(f"./dates/{date}", 'w') as file:
                 file.write(imageUrl)
             send_to_channel(date)
     else:
-        # The request failed
-        print('Error: ' + response.status_code)
-        log('Error: ' + response.status_code)
+        print('Error:', response.status_code)
+        log(f'Error: {response.status_code}')
 
 def date_exists(date):
-    # Check if the file exists
-    if os.path.isfile("./dates/" + date):
-        return True
-    else:
-        return False
+    return os.path.isfile(f"./dates/{date}")
 
 def send_to_channel(date):
-    with open("./dates/" + date, 'r') as file:
+    with open(f"./dates/{date}", 'r') as file:
         imageUrl = file.read()
 
-    # send image
+    # ارسال عکس
     response = requests.post(bot_url + 'sendPhoto', data={
         'chat_id': chat_id,
         'photo': imageUrl,
-        'caption': "bing wallpaper of " + date + "\n\n" + chat_id
+        'caption': f"bing wallpaper of {date}\n\n{chat_id}"
     })
-
-    # Check if the message was sent successfully
     if response.status_code == 200:
-        print('Image of ' + date + ' sent successfully!')
-        log('Image of ' + date + ' sent successfully!')
+        print(f'Image of {date} sent successfully!')
+        log(f'Image of {date} sent successfully!')
     else:
-        print('Error in sending image of ' + date + ' :' + response.status_code)
-        log('Error in sending image of ' + date + ' :' + response.status_code)
+        print('Error in sending image of', date, ':', response.status_code)
+        log(f'Error in sending image of {date} : {response.status_code}')
 
-    # send image as file:
+    # ارسال فایل با کیفیت بالا
     response = requests.post(bot_url + 'sendDocument', data={
         'chat_id': chat_id,
         'document': imageUrl,
-        'caption': "high quality bing wallpaper of " + date + "\n\n" + chat_id
+        'caption': f"high quality bing wallpaper of {date}\n\n{chat_id}"
     })
-
-    # Check if the message was sent successfully
     if response.status_code == 200:
-        print('document of ' + date + ' sent successfully!')
-        log('document of ' + date + ' sent successfully!')
+        print(f'document of {date} sent successfully!')
+        log(f'document of {date} sent successfully!')
     else:
-        print('Error in sending document of ' + date + ' :' + response.status_code)
-        log('Error in sending document of ' + date + ' :' + response.status_code)
+        print('Error in sending document of', date, ':', response.status_code)
+        log(f'Error in sending document of {date} : {response.status_code}')
 
 def log(log_message):
-    log = requests.post(bot_url + "sendMessage", data={
+    log_resp = requests.post(bot_url + "sendMessage", data={
         "chat_id": log_channel_id,
         "text": log_message
     })
-
-    # Check if the log was sent successfully
-    if log.status_code == 200:
+    if log_resp.status_code == 200:
         print('log registered')
     else:
-        print('Error in registering log:', log.status_code)
+        print('Error in registering log:', log_resp.status_code)
 
-main()
+if __name__ == "__main__":
+    main()
